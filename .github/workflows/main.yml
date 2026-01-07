@@ -29,9 +29,7 @@ jobs:
       - name: Build with Buildozer
         run: |
           export PATH=$PATH:$HOME/.local/bin
-          # Önceki hatalı kalıntıları temizle
-          buildozer android clean
-          # Log seviyesini 2 yaparak sadece önemli hataları göster (Hafıza yemez)
+          # Doğrudan paketlemeye geçiyoruz, hata payını azaltmak için log seviyesi 2
           yes | buildozer -v 2 android debug
         continue-on-error: false
 
