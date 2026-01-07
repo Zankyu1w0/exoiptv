@@ -10,9 +10,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Get Date
-        id: get-date
-        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -22,19 +24,22 @@ jobs:
       - name: Install Buildozer dependencies
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip ant autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev openjdk-17-jdk
+          sudo apt install -y git zip unzip ant autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
           pip install --upgrade pip
           pip install --user --upgrade buildozer cython==0.29.33
 
       - name: Build with Buildozer
         run: |
           export PATH=$PATH:$HOME/.local/bin
-          # Lisansları ve build işlemini tek seferde, hata vermeyecek şekilde tetikliyoruz
-          yes | buildozer android debug
+          # Önceki hatalı Gradle dosyalarını temizlemesi için clean ekledik
+          buildozer android clean
+          # Lisansları otomatik kabul et ve paketle
+          printf "y\n" | buildozer android debug
         continue-on-error: false
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Titan-TV-Build-${{ steps.get-date.outputs.date }}
+          name: Titan-TV-Build
           path: bin/*.apk
+          
