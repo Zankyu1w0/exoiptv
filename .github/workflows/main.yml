@@ -31,7 +31,7 @@ jobs:
       - name: Build with Buildozer
         run: |
           export PATH=$PATH:$HOME/.local/bin
-          # Sadece paketleme komutu, clean satırı silindi!
+          # Clean komutu yok, direkt dalıyoruz
           printf "y\n" | buildozer android debug
         continue-on-error: false
 
