@@ -29,8 +29,8 @@ jobs:
       - name: Build with Buildozer
         run: |
           export PATH=$PATH:$HOME/.local/bin
-          # Doğrudan paketlemeye geçiyoruz, hata payını azaltmak için log seviyesi 2
-          yes | buildozer -v 2 android debug
+          # En güvenli komut: log seviyesini standartta tutuyoruz
+          buildozer android debug
         continue-on-error: false
 
       - name: Upload APK
