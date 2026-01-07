@@ -8,15 +8,14 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4 # v2'den v4'e güncellendi
+      - uses: actions/checkout@v4
 
       - name: Get Date
         id: get-date
-        run: |
-          echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
       - name: Set up Python
-        uses: actions/setup-python@v5 # v4'ten v5'e güncellendi
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -30,11 +29,14 @@ jobs:
       - name: Build with Buildozer
         run: |
           export PATH=$PATH:$HOME/.local/bin
-          # Paketleme işlemi
-          yes | buildozer android debug
+          # Önceki hatalı kalıntıları temizle
+          buildozer android clean
+          # Log seviyesini 2 yaparak sadece önemli hataları göster (Hafıza yemez)
+          yes | buildozer -v 2 android debug
+        continue-on-error: false
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4 # İŞTE BURASI v4 OLARAK GÜNCELLENDİ
+        uses: actions/upload-artifact@v4
         with:
           name: Titan-TV-Build-${{ steps.get-date.outputs.date }}
           path: bin/*.apk
