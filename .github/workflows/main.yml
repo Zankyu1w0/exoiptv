@@ -31,9 +31,7 @@ jobs:
       - name: Build with Buildozer
         run: |
           export PATH=$PATH:$HOME/.local/bin
-          # Önceki hatalı Gradle dosyalarını temizlemesi için clean ekledik
-          buildozer android clean
-          # Lisansları otomatik kabul et ve paketle
+          # Sadece paketleme komutu, clean satırı silindi!
           printf "y\n" | buildozer android debug
         continue-on-error: false
 
