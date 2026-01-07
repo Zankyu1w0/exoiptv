@@ -22,15 +22,22 @@ jobs:
       - name: Install Buildozer dependencies
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip ant autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+          sudo apt install -y git zip unzip ant autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev openjdk-17-jdk
           pip install --upgrade pip
           pip install --user --upgrade buildozer cython==0.29.33
+
+      - name: Pre-accept Android SDK Licenses
+        run: |
+          mkdir -p $HOME/.android
+          touch $HOME/.android/repositories.cfg
+          # Android SDK Manager ile tüm lisansları peşin peşin kabul ediyoruz
+          yes | sdkmanager --licenses || true
 
       - name: Build with Buildozer
         run: |
           export PATH=$PATH:$HOME/.local/bin
-          # Bu komut tüm Android lisanslarını otomatik olarak onaylar (y tuşuna basar)
-          printf "y\n%.0s" {1..50} | buildozer android debug
+          # Buildozer'ın kendi içindeki lisans onaylama sistemini de tetikliyoruz
+          yes | buildozer android debug
         continue-on-error: false
 
       - name: Upload APK
@@ -38,4 +45,3 @@ jobs:
         with:
           name: Titan-TV-Build-${{ steps.get-date.outputs.date }}
           path: bin/*.apk
-          
