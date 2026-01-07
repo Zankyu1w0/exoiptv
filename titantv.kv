@@ -1,0 +1,75 @@
+BoxLayout:
+    orientation: 'vertical'
+    canvas.before:
+        Color:
+            rgba: 0, 0, 0, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    # Header
+    BoxLayout:
+        size_hint_y: None
+        height: '70dp'
+        padding: '10dp'
+        canvas.before:
+            Color:
+                rgba: 0.09, 0.17, 0.26, 0.8  # Header Rengi
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        Image:
+            source: 'https://i.hizliresim.com/t75soiq.png'
+            size_hint_x: None
+            width: '50dp'
+        Label:
+            text: 'TITAN TV'
+            font_size: '20sp'
+            bold: True
+            halign: 'left'
+            valign: 'middle'
+            text_size: self.size
+
+    # Kanal Listesi
+    RecycleView:
+        id: channel_list
+        viewclass: 'ChannelItem'
+        RecycleBoxLayout:
+            default_size: None, '80dp'
+            default_size_hint: 1, None
+            size_hint_y: None
+            height: self.minimum_height
+            orientation: 'vertical'
+
+<ChannelItem>:
+    orientation: 'horizontal'
+    padding: '10dp'
+    spacing: '15dp'
+    canvas.before:
+        Color:
+            rgba: (0.58, 0, 0.83, 1) if self.focused else (0.08, 0.12, 0.16, 1) # Odaklanınca mor olur
+        Rectangle:
+            pos: self.pos
+            size: self.size
+        Color:
+            rgba: 0.58, 0, 0.83, 1 # Alt Mor Çizgi
+        Line:
+            points: self.x, self.y, self.x + self.width, self.y
+            width: 1.2
+
+    AsyncImage:
+        source: root.logo
+        size_hint_x: None
+        width: '60dp'
+        allow_stretch: True
+
+    Label:
+        text: root.text
+        font_size: '18sp'
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.size
+
+    Button:
+        background_color: 0,0,0,0
+        on_press: root.on_press()
