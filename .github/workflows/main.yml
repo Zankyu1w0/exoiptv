@@ -26,17 +26,10 @@ jobs:
           pip install --upgrade pip
           pip install --user --upgrade buildozer cython==0.29.33
 
-      - name: Pre-accept Android SDK Licenses
-        run: |
-          mkdir -p $HOME/.android
-          touch $HOME/.android/repositories.cfg
-          # Android SDK Manager ile tüm lisansları peşin peşin kabul ediyoruz
-          yes | sdkmanager --licenses || true
-
       - name: Build with Buildozer
         run: |
           export PATH=$PATH:$HOME/.local/bin
-          # Buildozer'ın kendi içindeki lisans onaylama sistemini de tetikliyoruz
+          # Lisansları ve build işlemini tek seferde, hata vermeyecek şekilde tetikliyoruz
           yes | buildozer android debug
         continue-on-error: false
 
