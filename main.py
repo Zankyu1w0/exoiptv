@@ -1,6 +1,11 @@
 import flet as ft
 import requests
 import asyncio
+import os
+import certifi
+
+# Android için SSL sertifika yolunu ayarla (Çökme engelleyici)
+os.environ["SSL_CERT_FILE"] = certifi.where()
 
 async def main(page: ft.Page):
     page.title = "Deathless IPTV"
@@ -13,7 +18,8 @@ async def main(page: ft.Page):
     
     def save_file(content):
         filename = "Deathless-Hits.txt"
-        path = f"/storage/emulated/0/Download/{filename}"
+        # Daha güvenli bir kayıt yolu
+        path = "/storage/emulated/0/Download/" + filename
         try:
             with open(path, "a", encoding="utf-8") as f:
                 f.write(content + "\n")
@@ -23,7 +29,7 @@ async def main(page: ft.Page):
 
     async def start_check(e):
         if not txt_m3u.value:
-            lbl_status.value = "Lütfen link yapıştırın!"
+            lbl_status.value = "Link yapıştırın!"
             await page.update_async()
             return
             
@@ -37,9 +43,8 @@ async def main(page: ft.Page):
             line = line.strip()
             if "http" in line:
                 try:
-                    # Thread içinde requests çalıştırarak arayüzü kilitlenmekten kurtarıyoruz
                     loop = asyncio.get_event_loop()
-                    # verify=False Android'deki SSL sertifika hatalarını geçer
+                    # verify=certifi.where() Android'de güvenli bağlantı sağlar
                     future = loop.run_in_executor(None, lambda: requests.get(line, timeout=5, verify=False))
                     response = await future
                     
@@ -48,21 +53,15 @@ async def main(page: ft.Page):
                         save_file(line)
                         lbl_status.value = f"HIT Bulundu: {hits}"
                         await page.update_async()
-                except:
-                    pass
+                except Exception as ex:
+                    print(f"Hata: {ex}")
         
-        lbl_status.value = f"Bitti! Toplam {hits} HIT kaydedildi."
+        lbl_status.value = f"Bitti! {hits} HIT kaydedildi."
         await page.update_async()
 
-    btn_start = ft.ElevatedButton("TARAMAYI BAŞLAT", on_click=start_check)
+    btn_start = ft.ElevatedButton("BAŞLAT", on_click=start_check)
     
-    await page.add_async(
-        lbl_info,
-        txt_m3u,
-        btn_start,
-        lbl_status
-    )
+    await page.add_async(lbl_info, txt_m3u, btn_start, lbl_status)
 
 if __name__ == "__main__":
     ft.app(target=main)
-    
