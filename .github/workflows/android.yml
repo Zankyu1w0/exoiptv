@@ -1,109 +1,34 @@
-name: APK_Olusturucu
-on: [push, workflow_dispatch]
+name: Build Android APK
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
 
-      - name: Java Kur
-        uses: actions/setup-java@v4
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          python_version: '3.9'
 
-      - name: Sifirdan Temiz Kurulum
+      - name: Install dependencies
         run: |
-          rm -rf *
-          mkdir -p app/src/main/java/com/example/exoiptv
-          
-          # 1. Settings.gradle
-          echo "pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }" > settings.gradle
-          echo "dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }" >> settings.gradle
-          echo "include ':app'" >> settings.gradle
+          python -m pip install --upgrade pip
+          pip install flet requests buildozer cython==0.29.33
 
-          # 2. Ana build.gradle
-          cat <<EOF > build.gradle
-          plugins {
-              id 'com.android.application' version '8.1.0' apply false
-              id 'org.jetbrains.kotlin.android' version '1.8.20' apply false
-          }
-          EOF
-
-          # 3. App build.gradle
-          cat <<EOF > app/build.gradle
-          plugins {
-              id 'com.android.application'
-              id 'org.jetbrains.kotlin.android'
-          }
-          android {
-              namespace 'com.example.exoiptv'
-              compileSdk 33
-              defaultConfig {
-                  applicationId "com.example.exoiptv"
-                  minSdk 24
-                  targetSdk 33
-                  versionCode 1
-                  versionName "1.0"
-              }
-          }
-          dependencies {
-              implementation 'androidx.core:core-ktx:1.10.1'
-              implementation 'androidx.appcompat:appcompat:1.6.1'
-              implementation 'com.google.android.exoplayer:exoplayer:2.19.1'
-              implementation 'com.google.android.exoplayer:exoplayer-ui:2.19.1'
-          }
-          EOF
-
-          # 4. Manifest ve Kod
-          cat <<EOF > app/src/main/AndroidManifest.xml
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <uses-permission android:name="android.permission.INTERNET" />
-              <application android:label="Exo IPTV" android:usesCleartextTraffic="true" android:theme="@style/Theme.AppCompat.NoActionBar">
-                  <activity android:name="com.example.exoiptv.MainActivity" android:exported="true" android:screenOrientation="landscape">
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-                  </activity>
-              </application>
-          </manifest>
-          EOF
-
-          cat <<EOF > app/src/main/java/com/example/exoiptv/MainActivity.kt
-          package com.example.exoiptv
-          import android.os.Bundle
-          import androidx.appcompat.app.AppCompatActivity
-          import com.google.android.exoplayer2.ExoPlayer
-          import com.google.android.exoplayer2.MediaItem
-          import com.google.android.exoplayer2.ui.StyledPlayerView
-          class MainActivity : AppCompatActivity() {
-              private var player: ExoPlayer? = null
-              override fun onCreate(savedInstanceState: Bundle?) {
-                  super.onCreate(savedInstanceState)
-                  val playerView = StyledPlayerView(this)
-                  setContentView(playerView)
-                  player = ExoPlayer.Builder(this).build()
-                  playerView.player = player
-                  val mediaItem = MediaItem.fromUri("https://tv-trt1.medya.trt.com.tr/master.m3u8")
-                  player?.setMediaItem(mediaItem)
-                  player?.prepare()
-                  player?.play()
-              }
-              override fun onDestroy() { super.onDestroy(); player?.release() }
-          }
-          EOF
-
-      - name: APK Derle
+      - name: Build with Buildozer
         run: |
-          gradle wrapper --gradle-version 8.1
-          chmod +x gradlew
-          ./gradlew assembleDebug
-
-      - name: APK Yukle
-        uses: actions/upload-artifact@v4
+          # Bu komut Flet uygulamasını Android'e paketler
+          # İlk seferde biraz uzun sürebilir (15-20 dk)
+          yes | pip install openjdk-11-jdk
+          flet pack main.py --as-apk
+        
+      - name: Upload APK
+        uses: actions/upload-artifact@v2
         with:
-          name: IPTV-Uygulamam
-          path: app/build/outputs/apk/debug/*.apk
+          name: Deathless-IPTV-Checker
+          path: dist/*.apk
