@@ -6,8 +6,7 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 1.0.0
 
-# Kivy ve Requests ana gereksinimler
-requirements = python3,kivy,requests,certifi,openssl
+requirements = python3,kivy,requests,certifi,openssl,urllib3
 
 orientation = portrait
 permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,MANAGE_EXTERNAL_STORAGE
@@ -19,8 +18,6 @@ android.private_storage = True
 android.accept_sdk_license = True
 android.enable_androidx = True
 android.archs = arm64-v8a
-
-# Kivy için standart bootstrap
 p4a.bootstrap = sdl2
 
 [buildozer]
