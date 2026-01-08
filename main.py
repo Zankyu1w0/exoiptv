@@ -1,8 +1,9 @@
 import flet as ft
 import requests
-import os
+import asyncio
 
-def main(page: ft.Page):
+# Android'de çökmemesi için fonksiyonu async (asenkron) yapıyoruz
+async def main(page: ft.Page):
     page.title = "Deathless IPTV"
     page.theme_mode = ft.ThemeMode.DARK
     page.scroll = ft.ScrollMode.AUTO
@@ -12,24 +13,27 @@ def main(page: ft.Page):
     
     txt_m3u = ft.TextField(label="M3U Linkleri Yapıştır", multiline=True, min_lines=5)
     
+    # Dosya kaydetme fonksiyonu
     def save_file(content):
         filename = "Deathless-Hits.txt"
+        # Android Download klasörü yolu
         path = f"/storage/emulated/0/Download/{filename}"
         try:
             with open(path, "a", encoding="utf-8") as f:
                 f.write(content + "\n")
-            return f"Kaydedildi: {path}"
+            return True
         except:
-            return "Kaydetme hatası (İzin yok)"
+            return False
 
-    def start_check(e):
+    # Tarama butonu fonksiyonu (async)
+    async def start_check(e):
         if not txt_m3u.value:
             lbl_status.value = "Lütfen link yapıştırın!"
-            page.update()
+            await page.update_async()
             return
             
         lbl_status.value = "Taranıyor..."
-        page.update()
+        await page.update_async()
         
         lines = txt_m3u.value.splitlines()
         hits = 0
@@ -38,25 +42,28 @@ def main(page: ft.Page):
             line = line.strip()
             if "http" in line:
                 try:
-                    # Basit bağlantı testi
-                    response = requests.get(line, timeout=5)
+                    # requests.get işlemini ayrı bir thread'de çalıştırmak Android'de donmayı engeller
+                    loop = asyncio.get_event_loop()
+                    future = loop.run_in_executor(None, lambda: requests.get(line, timeout=5, verify=False))
+                    response = await future
+                    
                     if response.status_code == 200:
                         hits += 1
                         save_file(line)
                         lbl_status.value = f"HIT Bulundu: {hits}"
-                        page.update()
+                        await page.update_async()
                 except:
                     pass
         
         if hits == 0:
             lbl_status.value = "Tarama bitti, çalışan yok."
         else:
-            lbl_status.value = f"Bitti! Toplam {hits} çalışan link kaydedildi."
-        page.update()
+            lbl_status.value = f"Bitti! Toplam {hits} HIT indirilenlere kaydedildi."
+        await page.update_async()
 
     btn_start = ft.ElevatedButton("TARAMAYI BAŞLAT", on_click=start_check)
     
-    page.add(
+    await page.add_async(
         lbl_info,
         txt_m3u,
         btn_start,
@@ -64,5 +71,5 @@ def main(page: ft.Page):
     )
 
 if __name__ == "__main__":
+    # Android için en stabil çalıştırma modu
     ft.app(target=main)
-    
