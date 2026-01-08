@@ -13,16 +13,17 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Projeyi Modern Standartta Kur
+      - name: Sifirdan Temiz Kurulum
         run: |
           rm -rf *
           mkdir -p app/src/main/java/com/example/exoiptv
           
-          # 1. Settings
-          echo "rootProject.name = 'exoiptv'" > settings.gradle
+          # 1. Settings.gradle
+          echo "pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }" > settings.gradle
+          echo "dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }" >> settings.gradle
           echo "include ':app'" >> settings.gradle
 
-          # 2. Ana build.gradle (Modern Yapı)
+          # 2. Ana build.gradle
           cat <<EOF > build.gradle
           plugins {
               id 'com.android.application' version '8.1.0' apply false
@@ -30,7 +31,7 @@ jobs:
           }
           EOF
 
-          # 3. App build.gradle (Modern Yapı)
+          # 3. App build.gradle
           cat <<EOF > app/build.gradle
           plugins {
               id 'com.android.application'
@@ -47,7 +48,6 @@ jobs:
                   versionName "1.0"
               }
           }
-          repositories { google(); mavenCentral() }
           dependencies {
               implementation 'androidx.core:core-ktx:1.10.1'
               implementation 'androidx.appcompat:appcompat:1.6.1'
@@ -107,4 +107,3 @@ jobs:
         with:
           name: IPTV-Uygulamam
           path: app/build/outputs/apk/debug/*.apk
-          
