@@ -8,9 +8,9 @@ from kivy.clock import Clock
 import requests
 from urllib.parse import urlparse, parse_qs
 import threading
-
-# SSL ve Bağlantı hatalarını minimize etmek için
 import urllib3
+
+# SSL Sertifika uyarılarını Android'de kapatıyoruz (PHP'deki verify=false karşılığı)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class IPTVChecker(App):
@@ -28,7 +28,8 @@ class IPTVChecker(App):
             hint_text="M3U Linklerini buraya yapıştırın...",
             multiline=True,
             background_color=(0.1, 0.1, 0.1, 1),
-            foreground_color=(1, 1, 1, 1)
+            foreground_color=(1, 1, 1, 1),
+            font_name='Roboto' # Android standart fontu
         )
         layout.add_widget(self.txt_input)
 
@@ -50,18 +51,18 @@ class IPTVChecker(App):
             self.update_status("Link girmediniz!")
             return
 
+        # Linkleri ayıkla
         lines = [l.strip() for l in content.splitlines() if "username=" in l]
         total = len(lines)
         hit_count = 0
         bad_count = 0
 
-        # Oturum yönetimi (Session) kullanarak hız ve doğruluk artırılır
+        # PHP'deki CURL oturumu gibi bir Session oluşturuyoruz
         session = requests.Session()
-        session.verify = False
+        session.verify = False # SSL kontrolünü kapat
         session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Connection': 'keep-alive'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': '*/*'
         })
 
         for link in lines:
@@ -74,7 +75,7 @@ class IPTVChecker(App):
             
             self.update_stats(total, hit_count, bad_count)
         
-        self.update_status("Tarama Bitti! Sonuçlar Download klasöründe.")
+        self.update_status(f"Tarama Bitti! {hit_count} HIT kaydedildi.")
 
     def check_account(self, session, m3u):
         try:
@@ -85,21 +86,20 @@ class IPTVChecker(App):
             
             if not user or not passw: return False
 
-            # PHP'deki gibi API URL oluştur
+            # PHP'deki apiTarget'ı tam olarak kuruyoruz
             api_url = f"{parsed.scheme}://{parsed.netloc}/player_api.php?username={user}&password={passw}"
             
-            # allow_redirects=True (PHP'deki FOLLOWLOCATION)
-            r = session.get(api_url, timeout=15, allow_redirects=True)
+            # allow_redirects=True -> PHP'deki CURLOPT_FOLLOWLOCATION karşılığıdır
+            r = session.get(api_url, timeout=12, allow_redirects=True)
             
             if r.status_code == 200:
+                # Bazı paneller JSON yerine düz metin döner, her ikisini de kontrol et
                 try:
                     data = r.json()
-                    user_info = data.get('user_info', {})
-                    # Sadece status check değil, verinin varlığını da kontrol et
-                    if user_info.get('status', '').lower() == "active":
+                    if data.get('user_info', {}).get('status', '').lower() == "active":
                         return True
                 except:
-                    # JSON dönmüyorsa bile sayfa içeriğinde 'active' geçiyor mu bak
+                    # JSON hatası verirse metin içinde "Active" ara
                     if '"status":"Active"' in r.text or '"status":"active"' in r.text:
                         return True
         except:
@@ -108,7 +108,9 @@ class IPTVChecker(App):
 
     def save_hit(self, link):
         try:
-            with open("/storage/emulated/0/Download/hit-iptv-m3u.txt", "a") as f:
+            # Android Download klasörüne PHP'deki isimle kaydet
+            path = "/storage/emulated/0/Download/hit-iptv-m3u.txt"
+            with open(path, "a", encoding="utf-8") as f:
                 f.write(link + "\n")
         except:
             pass
@@ -121,4 +123,4 @@ class IPTVChecker(App):
 
 if __name__ == "__main__":
     IPTVChecker().run()
-    
+        
