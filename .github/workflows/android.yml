@@ -13,29 +13,29 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Her Seyi Sifirdan Kur
+      - name: Projeyi Modern Standartta Kur
         run: |
-          # 1. Eski ne varsa temizle (Çakışma olmasın)
           rm -rf *
-          
-          # 2. Klasör Yapısını Oluştur
           mkdir -p app/src/main/java/com/example/exoiptv
           
-          # 3. Ayar Dosyalarını Yaz (Kopyala-Yapıştır)
-          echo "include ':app'" > settings.gradle
+          # 1. Settings
+          echo "rootProject.name = 'exoiptv'" > settings.gradle
+          echo "include ':app'" >> settings.gradle
 
+          # 2. Ana build.gradle (Modern Yapı)
           cat <<EOF > build.gradle
-          buildscript {
-              repositories { google(); mavenCentral() }
-              dependencies { classpath 'com.android.tools.build:gradle:8.1.0'
-                             classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20' }
+          plugins {
+              id 'com.android.application' version '8.1.0' apply false
+              id 'org.jetbrains.kotlin.android' version '1.8.20' apply false
           }
-          allprojects { repositories { google(); mavenCentral() } }
           EOF
 
+          # 3. App build.gradle (Modern Yapı)
           cat <<EOF > app/build.gradle
-          apply plugin: 'com.android.application'
-          apply plugin: 'kotlin-android'
+          plugins {
+              id 'com.android.application'
+              id 'org.jetbrains.kotlin.android'
+          }
           android {
               namespace 'com.example.exoiptv'
               compileSdk 33
@@ -47,23 +47,25 @@ jobs:
                   versionName "1.0"
               }
           }
+          repositories { google(); mavenCentral() }
           dependencies {
               implementation 'androidx.core:core-ktx:1.10.1'
               implementation 'androidx.appcompat:appcompat:1.6.1'
               implementation 'com.google.android.exoplayer:exoplayer:2.19.1'
+              implementation 'com.google.android.exoplayer:exoplayer-ui:2.19.1'
           }
           EOF
 
-          # 4. Manifest ve Kod Dosyasını Yaz
+          # 4. Manifest ve Kod
           cat <<EOF > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.exoiptv">
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
               <application android:label="Exo IPTV" android:usesCleartextTraffic="true" android:theme="@style/Theme.AppCompat.NoActionBar">
-                  <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="landscape">
+                  <activity android:name="com.example.exoiptv.MainActivity" android:exported="true" android:screenOrientation="landscape">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHer" />
+                          <category android:name="android.intent.category.LAUNCHER" />
                       </intent-filter>
                   </activity>
               </application>
@@ -94,9 +96,9 @@ jobs:
           }
           EOF
 
-      - name: Derle
+      - name: APK Derle
         run: |
-          gradle wrapper --gradle-version 8.0
+          gradle wrapper --gradle-version 8.1
           chmod +x gradlew
           ./gradlew assembleDebug
 
@@ -105,3 +107,4 @@ jobs:
         with:
           name: IPTV-Uygulamam
           path: app/build/outputs/apk/debug/*.apk
+          
