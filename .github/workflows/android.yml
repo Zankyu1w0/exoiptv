@@ -13,21 +13,24 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Android Projesini Otomatik İnşa Et
+      - name: Android Projesini Manuel Kur
         run: |
-          # 1. Klasör yapısını zorla oluştur
+          # 1. Klasörleri temizle ve oluştur
+          rm -rf app
           mkdir -p app/src/main/java/com/example/exoiptv
           
-          # 2. Dosyaları yerlerine taşı
-          mv AndroidManifest.xml app/src/main/ || true
-          mv MainActivity.kt app/src/main/java/com/example/exoiptv/ || true
+          # 2. Manifest ve Kod dosyasını taşı
+          mv AndroidManifest.xml app/src/main/ || echo "Manifest yok"
+          mv MainActivity.kt app/src/main/java/com/example/exoiptv/ || echo "Kod yok"
           
-          # 3. KESİN ÇALIŞACAK AYAR DOSYALARI (Burası sihirli dokunuş)
-          
-          # Ana Ayar Dosyası
-          echo "include ':app'" > settings.gradle
+          # 3. Hazır Gradle sistemini kullan
+          # Bu komut eksik olan tüm jar ve wrapper dosyalarını otomatik üretir
+          gradle wrapper --gradle-version 8.0
 
-          # Ana İnşaat Dosyası (Üst Seviye)
+      - name: Ayar Dosyalarını Yaz
+        run: |
+          echo "include ':app'" > settings.gradle
+          
           cat <<EOF > build.gradle
           buildscript {
               repositories { google(); mavenCentral() }
@@ -37,7 +40,6 @@ jobs:
           allprojects { repositories { google(); mavenCentral() } }
           EOF
 
-          # Uygulama İnşaat Dosyası (Alt Seviye)
           cat <<EOF > app/build.gradle
           apply plugin: 'com.android.application'
           apply plugin: 'kotlin-android'
@@ -59,17 +61,11 @@ jobs:
           }
           EOF
 
-      - name: APK Derle (Ubuntu Gradle Kullanarak)
-        run: |
-          # Gradle Wrapper dosyalarını kendisi indirsin ve kursun
-          wget https://raw.githubusercontent.com/android/architecture-samples/main/gradlew
-          wget https://raw.githubusercontent.com/android/architecture-samples/main/gradlew.bat
-          chmod +x gradlew
-          ./gradlew assembleDebug
+      - name: APK Derle
+        run: ./gradlew assembleDebug
 
       - name: APK Yukle
         uses: actions/upload-artifact@v4
         with:
           name: IPTV-Uygulamam
           path: app/build/outputs/apk/debug/*.apk
-          
