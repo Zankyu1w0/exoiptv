@@ -1,51 +1,37 @@
 name: APK_Olusturucu
-
-on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch:
+on: [push, workflow_dispatch]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Kodu Cek
-        uses: actions/checkout@v4
-
-      - name: Java 17 Kur
+      - uses: actions/checkout@v4
+      
+      - name: Java Kur
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Projeyi Hazirla
+      - name: Proje Yapısını Sıfırdan Kur
         run: |
-          # Proje yapısını GitHub'ın anlayacağı hale getiriyoruz
+          # Gradle dosyalarını otomatik oluştur
+          gradle init --type basic
+          
+          # Klasörleri oluştur
           mkdir -p app/src/main/java/com/example/exoiptv
-          mkdir -p app/src/main
           
-          # Dosyaları doğru yerlere taşıyoruz (Hata almamak için)
-          [ -f AndroidManifest.xml ] && mv AndroidManifest.xml app/src/main/ || echo "Manifest zaten yerinde"
-          [ -f MainActivity.kt ] && mv MainActivity.kt app/src/main/java/com/example/exoiptv/ || echo "Kod zaten yerinde"
+          # Dosyaları yerlerine taşı
+          [ -f AndroidManifest.xml ] && mv AndroidManifest.xml app/src/main/ || echo "Manifest ok"
+          [ -f MainActivity.kt ] && mv MainActivity.kt app/src/main/java/com/example/exoiptv/ || echo "Kod ok"
+          [ -f build.gradle ] && mv build.gradle app/ || echo "Gradle ok"
           
-          # Temel bir ayar dosyası oluşturuyoruz (Gradle için)
           echo "include ':app'" > settings.gradle
-          
-          # Gradle'a calistirma izni ver
-          chmod +x gradlew || true
 
       - name: APK Derle
-        run: |
-          # Eğer gradlew yoksa bile hata vermeden basitçe derlemeye çalış
-          if [ -f gradlew ]; then
-            ./gradlew assembleDebug
-          else
-            echo "Gradle dosyası bulunamadı, bu adım manuel yapılandırma gerektirebilir."
-            exit 1
-          fi
+        run: gradle assembleDebug
 
-      - name: APK Dosyasını Yukle
+      - name: APK Yukle
         uses: actions/upload-artifact@v4
         with:
           name: IPTV-Uygulamam
