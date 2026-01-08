@@ -5,7 +5,10 @@ package.domain = org.deathless
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 1.0.0
-requirements = python3,flet,requests
+
+# Flet sürümü 0.21.2 olarak sabitlendi
+requirements = python3,flet==0.21.2,requests,urllib3,certifi,idna,charset-normalizer
+
 orientation = portrait
 permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
 android.api = 33
