@@ -1,62 +1,85 @@
+#:import Factory kivy.factory.Factory
+
 <AnaEkran>:
     BoxLayout:
         orientation: 'vertical'
         canvas.before:
             Color:
-                rgba: 0.05, 0.05, 0.05, 1
+                rgba: 0.1, 0.1, 0.12, 1  # HTML'deki gibi koyu arka plan
             Rectangle:
                 pos: self.pos
                 size: self.size
 
-        Label:
-            text: "TITAN TV"
+        # Üst Başlık Barı
+        BoxLayout:
             size_hint_y: None
-            height: "60dp"
-            font_size: "24sp"
-            bold: True
+            height: "70dp"
+            padding: "10dp"
+            canvas.before:
+                Color:
+                    rgba: 0.15, 0.15, 0.18, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            Label:
+                text: "TITAN TV PLAYER"
+                font_size: "22sp"
+                bold: True
+                color: 1, 0.8, 0, 1  # Altın sarısı başlık
 
         ScrollView:
+            do_scroll_x: False
             GridLayout:
+                id: kanal_listesi
                 cols: 1
                 size_hint_y: None
                 height: self.minimum_height
-                padding: "10dp"
-                spacing: "10dp"
+                padding: "15dp"
+                spacing: "12dp"
                 
-                # Kanal listesini otomatik oluşturur
+                # Bu kısım main.py'deki kanalları tasarımlı butonlara dönüştürür
                 Widget:
                     size_hint_y: None
                     height: 0
                     on_parent:
                         for kanal in root.kanallar: \
-                        btn = self.parent.add_widget(Factory.KanalButonu(text=kanal['text'], logo=kanal['logo'], url=kanal['url']))
+                        btn = Factory.KanalKutusu(); \
+                        btn.text = kanal['text']; \
+                        btn.logo = kanal['logo']; \
+                        btn.url = kanal['url']; \
+                        self.parent.add_widget(btn)
 
-<KanalButonu@Button>:
+# HTML/CSS gibi tasarlanmış Kanal Butonu
+<KanalKutusu@ButtonBehavior+BoxLayout>:
     text: ""
     logo: ""
     url: ""
     size_hint_y: None
-    height: "80dp"
-    background_normal: ""
-    background_color: 0.15, 0.15, 0.15, 1
+    height: "90dp"
+    padding: "10dp"
+    spacing: "15dp"
     on_release: app.kanal_ac(self.url)
+    canvas.before:
+        Color:
+            rgba: (0.2, 0.2, 0.25, 1) if self.state == 'normal' else (0.3, 0.3, 0.4, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [15,]
+
+    AsyncImage:
+        source: root.logo
+        size_hint_x: None
+        width: "70dp"
+        allow_stretch: True
     
-    BoxLayout:
-        pos: self.parent.pos
-        size: self.parent.size
-        padding: "10dp"
-        spacing: "20dp"
-        AsyncImage:
-            source: self.parent.logo
-            size_hint_x: None
-            width: "60dp"
-            allow_stretch: True
-        Label:
-            text: self.parent.text
-            font_size: "18sp"
-            halign: "left"
-            text_size: self.size
-            valign: "middle"
+    Label:
+        text: root.text
+        font_size: "18sp"
+        bold: True
+        halign: "left"
+        text_size: self.size
+        valign: "middle"
 
 <OynaticiEkran>:
     BoxLayout:
@@ -67,9 +90,9 @@
             options: {'allow_stretch': True}
         
         Button:
-            text: "GERI DON"
+            text: "GERİ DÖN"
             size_hint_y: None
             height: "50dp"
             background_normal: ""
-            background_color: 0.8, 0.1, 0.1, 1
+            background_color: 0.7, 0.1, 0.1, 1
             on_release: root.manager.current = 'ana'
