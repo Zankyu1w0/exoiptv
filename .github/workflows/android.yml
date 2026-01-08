@@ -8,10 +8,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python_version: '3.9'
 
@@ -22,13 +22,14 @@ jobs:
 
       - name: Build with Buildozer
         run: |
-          # Bu komut Flet uygulamasını Android'e paketler
-          # İlk seferde biraz uzun sürebilir (15-20 dk)
-          yes | pip install openjdk-11-jdk
+          # Flet uygulamasını APK'ya çevirir
+          sudo apt-get update
+          sudo apt-get install -y openjdk-17-jdk
           flet pack main.py --as-apk
         
       - name: Upload APK
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Deathless-IPTV-Checker
           path: dist/*.apk
+          
