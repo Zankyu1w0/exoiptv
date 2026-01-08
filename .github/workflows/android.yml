@@ -6,33 +6,70 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Java Kur
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Proje Yapısını Sıfırdan Kur
+      - name: Android Projesini Otomatik İnşa Et
         run: |
-          # Gradle dosyalarını otomatik oluştur
-          gradle init --type basic
-          
-          # Klasörleri oluştur
+          # 1. Klasör yapısını zorla oluştur
           mkdir -p app/src/main/java/com/example/exoiptv
           
-          # Dosyaları yerlerine taşı
-          [ -f AndroidManifest.xml ] && mv AndroidManifest.xml app/src/main/ || echo "Manifest ok"
-          [ -f MainActivity.kt ] && mv MainActivity.kt app/src/main/java/com/example/exoiptv/ || echo "Kod ok"
-          [ -f build.gradle ] && mv build.gradle app/ || echo "Gradle ok"
+          # 2. Dosyaları yerlerine taşı
+          mv AndroidManifest.xml app/src/main/ || true
+          mv MainActivity.kt app/src/main/java/com/example/exoiptv/ || true
           
+          # 3. KESİN ÇALIŞACAK AYAR DOSYALARI (Burası sihirli dokunuş)
+          
+          # Ana Ayar Dosyası
           echo "include ':app'" > settings.gradle
 
-      - name: APK Derle
-        run: gradle assembleDebug
+          # Ana İnşaat Dosyası (Üst Seviye)
+          cat <<EOF > build.gradle
+          buildscript {
+              repositories { google(); mavenCentral() }
+              dependencies { classpath 'com.android.tools.build:gradle:8.1.0'
+                             classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20' }
+          }
+          allprojects { repositories { google(); mavenCentral() } }
+          EOF
+
+          # Uygulama İnşaat Dosyası (Alt Seviye)
+          cat <<EOF > app/build.gradle
+          apply plugin: 'com.android.application'
+          apply plugin: 'kotlin-android'
+          android {
+              namespace 'com.example.exoiptv'
+              compileSdk 33
+              defaultConfig {
+                  applicationId "com.example.exoiptv"
+                  minSdk 24
+                  targetSdk 33
+                  versionCode 1
+                  versionName "1.0"
+              }
+          }
+          dependencies {
+              implementation 'androidx.core:core-ktx:1.10.1'
+              implementation 'androidx.appcompat:appcompat:1.6.1'
+              implementation 'com.google.android.exoplayer:exoplayer:2.19.1'
+          }
+          EOF
+
+      - name: APK Derle (Ubuntu Gradle Kullanarak)
+        run: |
+          # Gradle Wrapper dosyalarını kendisi indirsin ve kursun
+          wget https://raw.githubusercontent.com/android/architecture-samples/main/gradlew
+          wget https://raw.githubusercontent.com/android/architecture-samples/main/gradlew.bat
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
       - name: APK Yukle
         uses: actions/upload-artifact@v4
         with:
           name: IPTV-Uygulamam
           path: app/build/outputs/apk/debug/*.apk
+          
