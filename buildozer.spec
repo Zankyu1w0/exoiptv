@@ -6,8 +6,8 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 1.0.0
 
-# Sürümü listede bulunan 0.21.2 olarak güncelledim
-requirements = python3,flet==0.21.2,requests,urllib3,certifi,idna,charset-normalizer
+# Kütüphane listesini optimize ettik
+requirements = python3,flet==0.21.2,requests
 
 orientation = portrait
 permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,MANAGE_EXTERNAL_STORAGE
