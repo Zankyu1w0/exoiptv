@@ -8,20 +8,17 @@ from kivy.clock import Clock
 import requests
 from urllib.parse import urlparse, parse_qs
 import threading
-import json
 
-# Android'de SSL hatalarını tamamen devre dışı bırakmak için
+# SSL ve Bağlantı hatalarını minimize etmek için
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class IPTVChecker(App):
     def build(self):
-        self.title = "Deathless IPTV Pro"
+        self.title = "Deathless Pro V2"
         self.hits = []
         
         layout = BoxLayout(orientation='vertical', padding=15, spacing=10)
-        
-        # Tasarımı PHP'deki gibi koyu ve şık yapmaya çalıştık
         layout.add_widget(Label(text="DEATHLESS PRO CHECKER", font_size='22sp', color=(0.38, 0.4, 0.94, 1)))
         
         self.stats = Label(text="Toplam: 0 | HIT: 0 | Pasif: 0", size_hint_y=None, height=40)
@@ -31,7 +28,7 @@ class IPTVChecker(App):
             hint_text="M3U Linklerini buraya yapıştırın...",
             multiline=True,
             background_color=(0.1, 0.1, 0.1, 1),
-            foreground_color=(0.13, 0.77, 0.36, 1)
+            foreground_color=(1, 1, 1, 1)
         )
         layout.add_widget(self.txt_input)
 
@@ -58,22 +55,29 @@ class IPTVChecker(App):
         hit_count = 0
         bad_count = 0
 
+        # Oturum yönetimi (Session) kullanarak hız ve doğruluk artırılır
+        session = requests.Session()
+        session.verify = False
+        session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Connection': 'keep-alive'
+        })
+
         for link in lines:
-            # PHP'deki CURL mantığı burada
-            if self.check_with_proxy_logic(link):
+            if self.check_account(session, link):
                 hit_count += 1
                 self.hits.append(link)
-                self.save_hit_to_local(link)
+                self.save_hit(link)
             else:
                 bad_count += 1
             
             self.update_stats(total, hit_count, bad_count)
         
-        self.update_status("Tarama Tamamlandı! HIT'ler Download klasöründe.")
+        self.update_status("Tarama Bitti! Sonuçlar Download klasöründe.")
 
-    def check_with_proxy_logic(self, m3u):
+    def check_account(self, session, m3u):
         try:
-            # 1. Linki parçala
             parsed = urlparse(m3u)
             qs = parse_qs(parsed.query)
             user = qs.get('username', [None])[0]
@@ -81,28 +85,28 @@ class IPTVChecker(App):
             
             if not user or not passw: return False
 
-            # 2. PHP'deki apiTarget'ı oluştur
+            # PHP'deki gibi API URL oluştur
             api_url = f"{parsed.scheme}://{parsed.netloc}/player_api.php?username={user}&password={passw}"
             
-            # 3. PHP CURL Ayarları (SSL bypass, Timeout, User-Agent)
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Accept': '*/*'
-            }
-            
-            # Localhost mantığında bir request (timeout ve verify ayarları kritik)
-            r = requests.get(api_url, headers=headers, timeout=12, verify=False)
+            # allow_redirects=True (PHP'deki FOLLOWLOCATION)
+            r = session.get(api_url, timeout=15, allow_redirects=True)
             
             if r.status_code == 200:
-                data = r.json()
-                # PHP'deki user_info->status check
-                if data.get('user_info') and data['user_info'].get('status', '').lower() == "active":
-                    return True
+                try:
+                    data = r.json()
+                    user_info = data.get('user_info', {})
+                    # Sadece status check değil, verinin varlığını da kontrol et
+                    if user_info.get('status', '').lower() == "active":
+                        return True
+                except:
+                    # JSON dönmüyorsa bile sayfa içeriğinde 'active' geçiyor mu bak
+                    if '"status":"Active"' in r.text or '"status":"active"' in r.text:
+                        return True
         except:
             pass
         return False
 
-    def save_hit_to_local(self, link):
+    def save_hit(self, link):
         try:
             with open("/storage/emulated/0/Download/hit-iptv-m3u.txt", "a") as f:
                 f.write(link + "\n")
