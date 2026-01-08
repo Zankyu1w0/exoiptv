@@ -6,8 +6,8 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 1.0.0
 
-# KRİTİK: openssl ve diğer bağımlılıklar eklendi
-requirements = python3,flet==0.21.2,requests,urllib3,certifi,idna,charset-normalizer,openssl
+# certifi ve openssl buraya eklendi
+requirements = python3,flet==0.21.2,requests,certifi,openssl,urllib3,idna,charset-normalizer
 
 orientation = portrait
 permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,MANAGE_EXTERNAL_STORAGE
@@ -17,7 +17,7 @@ android.ndk = 25b
 android.private_storage = True
 android.accept_sdk_license = True
 android.enable_androidx = True
-android.archs = arm64-v8a, armeabi-v7a
+android.archs = arm64-v8a
 p4a.bootstrap = sdl2
 
 [buildozer]
