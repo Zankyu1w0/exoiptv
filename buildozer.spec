@@ -5,20 +5,16 @@ package.domain = org.deathless
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 1.0.0
-
-# Kütüphane listesini optimize ettik
-requirements = python3,flet==0.21.2,requests
-
+requirements = python3,flet,requests
 orientation = portrait
-permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,MANAGE_EXTERNAL_STORAGE
-android.api = 31
+permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
+android.api = 33
 android.minapi = 21
 android.ndk = 25b
 android.private_storage = True
 android.accept_sdk_license = True
 android.enable_androidx = True
-android.archs = arm64-v8a, armeabi-v7a
-android.allow_backup = True
+android.archs = arm64-v8a
 
 [buildozer]
 log_level = 2
