@@ -1,82 +1,100 @@
+#:import hex kivy.utils.get_color_from_hex
 #:import Factory kivy.factory.Factory
+
+ScreenManager:
+    AnaEkran:
+        name: 'ana'
+    OynaticiEkran:
+        name: 'oynat'
 
 <AnaEkran>:
     BoxLayout:
         orientation: 'vertical'
         canvas.before:
             Color:
-                rgba: 0.1, 0.1, 0.12, 1  # HTML'deki gibi koyu arka plan
+                rgba: 0, 0, 0, 1 # body background-color: #000000
             Rectangle:
                 pos: self.pos
                 size: self.size
 
-        # Üst Başlık Barı
+        # .header sınıfı
         BoxLayout:
             size_hint_y: None
-            height: "70dp"
+            height: "76dp"
             padding: "10dp"
+            spacing: "10dp"
             canvas.before:
                 Color:
-                    rgba: 0.15, 0.15, 0.18, 1
+                    rgba: hex('#172b43cc') # background-color: rgba(23, 43, 67, 0.8)
                 Rectangle:
                     pos: self.pos
                     size: self.size
+            
+            AsyncImage:
+                source: "https://i.hizliresim.com/t75soiq.png"
+                size_hint: None, None
+                size: "55dp", "55dp"
+            
             Label:
-                text: "TITAN TV PLAYER"
-                font_size: "22sp"
+                text: "TITAN TV"
+                color: hex('#e1e1e1')
+                font_size: "16sp"
                 bold: True
-                color: 1, 0.8, 0, 1  # Altın sarısı başlık
+                halign: "left"
+                text_size: self.size
+                valign: "middle"
 
         ScrollView:
-            do_scroll_x: False
             GridLayout:
-                id: kanal_listesi
+                id: list_container
                 cols: 1
                 size_hint_y: None
                 height: self.minimum_height
-                padding: "15dp"
-                spacing: "12dp"
                 
-                # Bu kısım main.py'deki kanalları tasarımlı butonlara dönüştürür
+                # HTML kanal-item döngüsü
                 Widget:
                     size_hint_y: None
                     height: 0
                     on_parent:
                         for kanal in root.kanallar: \
-                        btn = Factory.KanalKutusu(); \
-                        btn.text = kanal['text']; \
-                        btn.logo = kanal['logo']; \
-                        btn.url = kanal['url']; \
-                        self.parent.add_widget(btn)
+                        item = Factory.ChannelItem(); \
+                        item.text = kanal['text']; \
+                        item.logo = kanal['logo']; \
+                        item.url = kanal['url']; \
+                        list_container.add_widget(item)
 
-# HTML/CSS gibi tasarlanmış Kanal Butonu
-<KanalKutusu@ButtonBehavior+BoxLayout>:
+# .channel-item sınıfı
+<ChannelItem@ButtonBehavior+BoxLayout>:
     text: ""
     logo: ""
     url: ""
     size_hint_y: None
-    height: "90dp"
-    padding: "10dp"
-    spacing: "15dp"
+    height: "75dp"
+    padding: ["10dp", "0dp"]
+    spacing: "10dp"
     on_release: app.kanal_ac(self.url)
     canvas.before:
         Color:
-            rgba: (0.2, 0.2, 0.25, 1) if self.state == 'normal' else (0.3, 0.3, 0.4, 1)
-        RoundedRectangle:
+            rgba: hex('#16202a') # background-color: #16202a
+        Rectangle:
             pos: self.pos
             size: self.size
-            radius: [15,]
+        Color:
+            rgba: hex('#9400d3') # border-bottom: 2px solid #9400d3
+        Line:
+            points: [self.x, self.y, self.x + self.width, self.y]
+            width: 1.1
 
     AsyncImage:
         source: root.logo
-        size_hint_x: None
-        width: "70dp"
-        allow_stretch: True
+        size_hint: None, None
+        size: "55dp", "55dp"
+        pos_hint: {"center_y": .5}
     
     Label:
         text: root.text
-        font_size: "18sp"
-        bold: True
+        color: hex('#e1e1e1')
+        font_size: "16sp"
         halign: "left"
         text_size: self.size
         valign: "middle"
@@ -86,13 +104,11 @@
         orientation: 'vertical'
         VideoPlayer:
             id: player
-            source: ""
             options: {'allow_stretch': True}
-        
         Button:
-            text: "GERİ DÖN"
+            text: "ANA SAYFAYA DÖN"
             size_hint_y: None
             height: "50dp"
             background_normal: ""
-            background_color: 0.7, 0.1, 0.1, 1
+            background_color: hex('#172b43')
             on_release: root.manager.current = 'ana'
