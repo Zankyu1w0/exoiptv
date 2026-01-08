@@ -13,16 +13,92 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Gradle Hazirla
+      - name: Her Seyi Sifirdan Kur
         run: |
-          # Dışarıda settings.gradle yoksa oluşturuyoruz ki app klasörünü görsün
+          # 1. Eski ne varsa temizle (Çakışma olmasın)
+          rm -rf *
+          
+          # 2. Klasör Yapısını Oluştur
+          mkdir -p app/src/main/java/com/example/exoiptv
+          
+          # 3. Ayar Dosyalarını Yaz (Kopyala-Yapıştır)
           echo "include ':app'" > settings.gradle
-          # Gradle sistemini kur
+
+          cat <<EOF > build.gradle
+          buildscript {
+              repositories { google(); mavenCentral() }
+              dependencies { classpath 'com.android.tools.build:gradle:8.1.0'
+                             classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20' }
+          }
+          allprojects { repositories { google(); mavenCentral() } }
+          EOF
+
+          cat <<EOF > app/build.gradle
+          apply plugin: 'com.android.application'
+          apply plugin: 'kotlin-android'
+          android {
+              namespace 'com.example.exoiptv'
+              compileSdk 33
+              defaultConfig {
+                  applicationId "com.example.exoiptv"
+                  minSdk 24
+                  targetSdk 33
+                  versionCode 1
+                  versionName "1.0"
+              }
+          }
+          dependencies {
+              implementation 'androidx.core:core-ktx:1.10.1'
+              implementation 'androidx.appcompat:appcompat:1.6.1'
+              implementation 'com.google.android.exoplayer:exoplayer:2.19.1'
+          }
+          EOF
+
+          # 4. Manifest ve Kod Dosyasını Yaz
+          cat <<EOF > app/src/main/AndroidManifest.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.exoiptv">
+              <uses-permission android:name="android.permission.INTERNET" />
+              <application android:label="Exo IPTV" android:usesCleartextTraffic="true" android:theme="@style/Theme.AppCompat.NoActionBar">
+                  <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="landscape">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHer" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+
+          cat <<EOF > app/src/main/java/com/example/exoiptv/MainActivity.kt
+          package com.example.exoiptv
+          import android.os.Bundle
+          import androidx.appcompat.app.AppCompatActivity
+          import com.google.android.exoplayer2.ExoPlayer
+          import com.google.android.exoplayer2.MediaItem
+          import com.google.android.exoplayer2.ui.StyledPlayerView
+          class MainActivity : AppCompatActivity() {
+              private var player: ExoPlayer? = null
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
+                  val playerView = StyledPlayerView(this)
+                  setContentView(playerView)
+                  player = ExoPlayer.Builder(this).build()
+                  playerView.player = player
+                  val mediaItem = MediaItem.fromUri("https://tv-trt1.medya.trt.com.tr/master.m3u8")
+                  player?.setMediaItem(mediaItem)
+                  player?.prepare()
+                  player?.play()
+              }
+              override fun onDestroy() { super.onDestroy(); player?.release() }
+          }
+          EOF
+
+      - name: Derle
+        run: |
           gradle wrapper --gradle-version 8.0
           chmod +x gradlew
-
-      - name: APK Derle
-        run: ./gradlew assembleDebug
+          ./gradlew assembleDebug
 
       - name: APK Yukle
         uses: actions/upload-artifact@v4
