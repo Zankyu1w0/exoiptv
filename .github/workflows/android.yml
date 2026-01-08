@@ -13,53 +13,13 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Android Projesini Manuel Kur
+      - name: Gradle Hazirla
         run: |
-          # 1. Klasörleri temizle ve oluştur
-          rm -rf app
-          mkdir -p app/src/main/java/com/example/exoiptv
-          
-          # 2. Manifest ve Kod dosyasını taşı
-          mv AndroidManifest.xml app/src/main/ || echo "Manifest yok"
-          mv MainActivity.kt app/src/main/java/com/example/exoiptv/ || echo "Kod yok"
-          
-          # 3. Hazır Gradle sistemini kullan
-          # Bu komut eksik olan tüm jar ve wrapper dosyalarını otomatik üretir
-          gradle wrapper --gradle-version 8.0
-
-      - name: Ayar Dosyalarını Yaz
-        run: |
+          # Dışarıda settings.gradle yoksa oluşturuyoruz ki app klasörünü görsün
           echo "include ':app'" > settings.gradle
-          
-          cat <<EOF > build.gradle
-          buildscript {
-              repositories { google(); mavenCentral() }
-              dependencies { classpath 'com.android.tools.build:gradle:8.1.0'
-                             classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20' }
-          }
-          allprojects { repositories { google(); mavenCentral() } }
-          EOF
-
-          cat <<EOF > app/build.gradle
-          apply plugin: 'com.android.application'
-          apply plugin: 'kotlin-android'
-          android {
-              namespace 'com.example.exoiptv'
-              compileSdk 33
-              defaultConfig {
-                  applicationId "com.example.exoiptv"
-                  minSdk 24
-                  targetSdk 33
-                  versionCode 1
-                  versionName "1.0"
-              }
-          }
-          dependencies {
-              implementation 'androidx.core:core-ktx:1.10.1'
-              implementation 'androidx.appcompat:appcompat:1.6.1'
-              implementation 'com.google.android.exoplayer:exoplayer:2.19.1'
-          }
-          EOF
+          # Gradle sistemini kur
+          gradle wrapper --gradle-version 8.0
+          chmod +x gradlew
 
       - name: APK Derle
         run: ./gradlew assembleDebug
