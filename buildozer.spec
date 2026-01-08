@@ -6,7 +6,8 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 1.0.0
 
-requirements = python3,kivy,requests,certifi,openssl,urllib3
+# Kütüphaneler PHP CURL mantığı için güncellendi
+requirements = python3,kivy,requests,urllib3,certifi,openssl,idna,charset-normalizer
 
 orientation = portrait
 permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,MANAGE_EXTERNAL_STORAGE
