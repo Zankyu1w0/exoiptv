@@ -10,23 +10,43 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Kodu Cek
+        uses: actions/checkout@v4
 
-      - name: Java Kurulumu
-        uses: actions/setup-java@v3
+      - name: Java 17 Kur
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Gradle Yetkilendirme
-        run: chmod +x gradlew
-        continue-on-error: true
+      - name: Projeyi Hazirla
+        run: |
+          # Proje yapısını GitHub'ın anlayacağı hale getiriyoruz
+          mkdir -p app/src/main/java/com/example/exoiptv
+          mkdir -p app/src/main
+          
+          # Dosyaları doğru yerlere taşıyoruz (Hata almamak için)
+          [ -f AndroidManifest.xml ] && mv AndroidManifest.xml app/src/main/ || echo "Manifest zaten yerinde"
+          [ -f MainActivity.kt ] && mv MainActivity.kt app/src/main/java/com/example/exoiptv/ || echo "Kod zaten yerinde"
+          
+          # Temel bir ayar dosyası oluşturuyoruz (Gradle için)
+          echo "include ':app'" > settings.gradle
+          
+          # Gradle'a calistirma izni ver
+          chmod +x gradlew || true
 
       - name: APK Derle
-        run: ./gradlew assembleDebug || echo "Hata kontrol ediliyor..."
+        run: |
+          # Eğer gradlew yoksa bile hata vermeden basitçe derlemeye çalış
+          if [ -f gradlew ]; then
+            ./gradlew assembleDebug
+          else
+            echo "Gradle dosyası bulunamadı, bu adım manuel yapılandırma gerektirebilir."
+            exit 1
+          fi
 
       - name: APK Dosyasını Yukle
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: IPTV-Uygulamam
           path: app/build/outputs/apk/debug/*.apk
