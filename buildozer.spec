@@ -6,8 +6,8 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 1.0.0
 
-# Flet sürümü 0.21.2 olarak sabitlendi
-requirements = python3,flet==0.21.2,requests,urllib3,certifi,idna,charset-normalizer
+# Sadece gerekli olanlar
+requirements = python3,flet==0.21.2,requests
 
 orientation = portrait
 permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
