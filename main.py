@@ -1,24 +1,21 @@
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.utils import platform
+from kivy.utils import platform, get_color_from_hex
 from kivy.properties import ListProperty, StringProperty
-from kivy.factory import Factory
 from kivy.lang import Builder
 
-# Android Yatay Mod ve İzinler
+# Yatay mod ve Android ayarları
 if platform == 'android':
     from android.runnable import run_on_ui_thread
     from jnius import autoclass
-    
     @run_on_ui_thread
     def set_landscape():
-        PythonActivity = autoclass('org.kivy.android.PythonActivity')
-        ActivityInfo = autoclass('android.content.pm.ActivityInfo')
-        activity = PythonActivity.mActivity
-        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
+        activity = autoclass('org.kivy.android.PythonActivity').mActivity
+        activity.setRequestedOrientation(autoclass('android.content.pm.ActivityInfo').SCREEN_ORIENTATION_LANDSCAPE)
     set_landscape()
 
 class AnaEkran(Screen):
+    # HTML'deki listenin aynısı
     kanallar = ListProperty([
         {'text': 'Şömine', 'logo': 'https://i.hizliresim.com/5unr56e.png', 'url': 'https://playlist.fasttvcdn.com/pl/mymfdhjrcpjziy5lmdkujw/somine-keyfi/playlist/3.m3u8'},
         {'text': 'TRT 1 HD', 'logo': 'https://i.ibb.co/5KpsVpx/TRT-1.png', 'url': 'https://tv-trt1.medya.trt.com.tr/master.m3u8'},
@@ -32,24 +29,20 @@ class AnaEkran(Screen):
 
 class OynaticiEkran(Screen):
     video_url = StringProperty("")
-
     def on_enter(self, *args):
-        # KVPlayer mantığı: Video kaynağını set et ve oynat
         self.ids.player.source = self.video_url
         self.ids.player.state = 'play'
-
     def on_leave(self, *args):
-        # Ekrandan çıkınca videoyu tamamen öldür
         self.ids.player.state = 'stop'
         self.ids.player.unload()
 
 class TitanApp(App):
     def build(self):
         return Builder.load_file('titan.kv')
-
+    
     def kanal_ac(self, url):
-        self.root.current = 'oynat'
         self.root.get_screen('oynat').video_url = url
+        self.root.current = 'oynat'
 
 if __name__ == '__main__':
     TitanApp().run()
