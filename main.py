@@ -1,15 +1,12 @@
 from kivy.app import App
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.videoplayer import VideoPlayer
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.utils import platform
-from kivy.properties import StringProperty, ListProperty
+from kivy.properties import ListProperty, StringProperty
+from kivy.factory import Factory
 
-# Android Yatay Mod Ayarı
 if platform == 'android':
     from android.runnable import run_on_ui_thread
     from jnius import autoclass
-    
     @run_on_ui_thread
     def set_landscape():
         PythonActivity = autoclass('org.kivy.android.PythonActivity')
@@ -32,14 +29,11 @@ class AnaEkran(Screen):
 
 class OynaticiEkran(Screen):
     video_url = StringProperty("")
-
     def on_enter(self, *args):
         self.ids.player.source = self.video_url
         self.ids.player.state = 'play'
-
     def on_leave(self, *args):
         self.ids.player.state = 'stop'
-        self.ids.player.source = ""
 
 class TitanApp(App):
     def build(self):
@@ -47,7 +41,6 @@ class TitanApp(App):
         sm.add_widget(AnaEkran(name='ana'))
         sm.add_widget(OynaticiEkran(name='oynat'))
         return sm
-
     def kanal_ac(self, url):
         self.root.get_screen('oynat').video_url = url
         self.root.current = 'oynat'
