@@ -3,10 +3,13 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.utils import platform
 from kivy.properties import ListProperty, StringProperty
 from kivy.factory import Factory
+from kivy.lang import Builder
 
+# Android Yatay Mod ve İzinler
 if platform == 'android':
     from android.runnable import run_on_ui_thread
     from jnius import autoclass
+    
     @run_on_ui_thread
     def set_landscape():
         PythonActivity = autoclass('org.kivy.android.PythonActivity')
@@ -29,21 +32,25 @@ class AnaEkran(Screen):
 
 class OynaticiEkran(Screen):
     video_url = StringProperty("")
+
     def on_enter(self, *args):
+        # KVPlayer mantığı: Video kaynağını set et ve oynat
         self.ids.player.source = self.video_url
         self.ids.player.state = 'play'
+
     def on_leave(self, *args):
+        # Ekrandan çıkınca videoyu tamamen öldür
         self.ids.player.state = 'stop'
+        self.ids.player.unload()
 
 class TitanApp(App):
     def build(self):
-        sm = ScreenManager()
-        sm.add_widget(AnaEkran(name='ana'))
-        sm.add_widget(OynaticiEkran(name='oynat'))
-        return sm
+        return Builder.load_file('titan.kv')
+
     def kanal_ac(self, url):
-        self.root.get_screen('oynat').video_url = url
         self.root.current = 'oynat'
+        self.root.get_screen('oynat').video_url = url
 
 if __name__ == '__main__':
     TitanApp().run()
+    
