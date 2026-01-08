@@ -1,75 +1,75 @@
-BoxLayout:
-    orientation: 'vertical'
-    canvas.before:
-        Color:
-            rgba: 0, 0, 0, 1
-        Rectangle:
-            pos: self.pos
-            size: self.size
-
-    # Header
+<AnaEkran>:
     BoxLayout:
-        size_hint_y: None
-        height: '70dp'
-        padding: '10dp'
+        orientation: 'vertical'
         canvas.before:
             Color:
-                rgba: 0.09, 0.17, 0.26, 0.8  # Header Rengi
+                rgba: 0.05, 0.05, 0.05, 1
             Rectangle:
                 pos: self.pos
                 size: self.size
-        Image:
-            source: 'https://i.hizliresim.com/t75soiq.png'
-            size_hint_x: None
-            width: '50dp'
+
         Label:
-            text: 'TITAN TV'
-            font_size: '20sp'
-            bold: True
-            halign: 'left'
-            valign: 'middle'
-            text_size: self.size
-
-    # Kanal Listesi
-    RecycleView:
-        id: channel_list
-        viewclass: 'ChannelItem'
-        RecycleBoxLayout:
-            default_size: None, '80dp'
-            default_size_hint: 1, None
+            text: "TITAN TV"
             size_hint_y: None
-            height: self.minimum_height
-            orientation: 'vertical'
+            height: "60dp"
+            font_size: "24sp"
+            bold: True
 
-<ChannelItem>:
-    orientation: 'horizontal'
-    padding: '10dp'
-    spacing: '15dp'
-    canvas.before:
-        Color:
-            rgba: (0.58, 0, 0.83, 1) if self.focused else (0.08, 0.12, 0.16, 1) # Odaklanınca mor olur
-        Rectangle:
-            pos: self.pos
-            size: self.size
-        Color:
-            rgba: 0.58, 0, 0.83, 1 # Alt Mor Çizgi
-        Line:
-            points: self.x, self.y, self.x + self.width, self.y
-            width: 1.2
+        ScrollView:
+            GridLayout:
+                cols: 1
+                size_hint_y: None
+                height: self.minimum_height
+                padding: "10dp"
+                spacing: "10dp"
+                
+                # Kanal listesini otomatik oluşturur
+                Widget:
+                    size_hint_y: None
+                    height: 0
+                    on_parent:
+                        for kanal in root.kanallar: \
+                        btn = self.parent.add_widget(Factory.KanalButonu(text=kanal['text'], logo=kanal['logo'], url=kanal['url']))
 
-    AsyncImage:
-        source: root.logo
-        size_hint_x: None
-        width: '60dp'
-        allow_stretch: True
+<KanalButonu@Button>:
+    text: ""
+    logo: ""
+    url: ""
+    size_hint_y: None
+    height: "80dp"
+    background_normal: ""
+    background_color: 0.15, 0.15, 0.15, 1
+    on_release: app.kanal_ac(self.url)
+    
+    BoxLayout:
+        pos: self.parent.pos
+        size: self.parent.size
+        padding: "10dp"
+        spacing: "20dp"
+        AsyncImage:
+            source: self.parent.logo
+            size_hint_x: None
+            width: "60dp"
+            allow_stretch: True
+        Label:
+            text: self.parent.text
+            font_size: "18sp"
+            halign: "left"
+            text_size: self.size
+            valign: "middle"
 
-    Label:
-        text: root.text
-        font_size: '18sp'
-        halign: 'left'
-        valign: 'middle'
-        text_size: self.size
-
-    Button:
-        background_color: 0,0,0,0
-        on_press: root.on_press()
+<OynaticiEkran>:
+    BoxLayout:
+        orientation: 'vertical'
+        VideoPlayer:
+            id: player
+            source: ""
+            options: {'allow_stretch': True}
+        
+        Button:
+            text: "GERI DON"
+            size_hint_y: None
+            height: "50dp"
+            background_normal: ""
+            background_color: 0.8, 0.1, 0.1, 1
+            on_release: root.manager.current = 'ana'
