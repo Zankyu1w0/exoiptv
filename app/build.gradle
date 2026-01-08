@@ -1,27 +1,27 @@
 plugins {
     id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
+    id 'kotlin-android'
 }
 
 android {
-    namespace 'com.exoiptv'
     compileSdk 34
-
     defaultConfig {
-        applicationId "com.exoiptv"
+        applicationId "com.example.exoiptv"
         minSdk 21
         targetSdk 34
         versionCode 1
         versionName "1.0"
     }
-
     buildTypes {
         release {
             minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
 
 dependencies {
-    implementation 'com.google.android.exoplayer:exoplayer:2.19.1'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.10"
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
 }
